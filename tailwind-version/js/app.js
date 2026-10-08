@@ -1,13 +1,21 @@
 import { loadCatalog, filterCatalog, money } from './catalog.js';
 import { Cart } from './cart.js';
 import { validateContact } from './validation.js';
+import { loadFilters, saveFilters } from './storage.js';
+import { initConnectivity } from './connectivity.js';
+import { initScrollPreference } from './preferences.js';
 
 const $ = id => document.getElementById(id);
 const storageKey = 'urban-style.cart.v1';
+const updatedAtKey = 'urban-style.cart.updatedAt.v1';
+const cartDateFormat = new Intl.DateTimeFormat('es-EC', {
+  dateStyle: 'long', timeStyle: 'medium', timeZone: 'America/Guayaquil'
+});
+let cartUpdatedAt = loadCartUpdatedAt();
 let products = [];
 let cart = new Cart([]);
 let opener;
-let announcementTimer;
+const announcementTimers = new WeakMap();
 const dialog = $('cart-dialog');
 
 // Text from the catalog or storage never goes through innerHTML.
@@ -18,13 +26,35 @@ function el(tag, className = '', text) {
   return node;
 }
 function announce(message, target = $('announcement')) {
-  clearTimeout(announcementTimer);
+  // Each live region retains its message; product feedback must not cancel warnings.
+  clearTimeout(announcementTimers.get(target));
   target.textContent = '';
-  announcementTimer = setTimeout(() => { target.textContent = message; }, 50);
+  announcementTimers.set(target, setTimeout(() => { target.textContent = message; }, 50));
+}
+function loadCartUpdatedAt() {
+  try {
+    const saved = localStorage.getItem(updatedAtKey);
+    const date = new Date(saved);
+    return saved && Number.isFinite(date.getTime()) && date.toISOString() === saved ? saved : null;
+  } catch { return null; }
+}
+function renderCartUpdatedAt() {
+  const target = $('cart-updated-at');
+  if (!cartUpdatedAt) {
+    target.textContent = 'Todavía no hay modificaciones registradas.';
+    return;
+  }
+  const time = el('time', '', cartDateFormat.format(new Date(cartUpdatedAt)));
+  time.dateTime = cartUpdatedAt;
+  target.replaceChildren('Última actualización: ', time, ' (hora de Ecuador continental).');
 }
 function saveCart() {
+  // Called only after a successful user mutation, never on load or opening the dialog.
+  cartUpdatedAt = new Date().toISOString();
+  renderCartUpdatedAt();
   try {
     localStorage.setItem(storageKey, JSON.stringify(cart.serialize()));
+    localStorage.setItem(updatedAtKey, cartUpdatedAt);
     $('storage-note').hidden = true;
   } catch {
     $('storage-note').hidden = false;
@@ -33,8 +63,11 @@ function saveCart() {
 }
 function updateTotals() {
   $('cart-count').textContent = cart.count;
+  $('cart-item-count').textContent = `${cart.count} ${cart.count === 1 ? 'prenda' : 'prendas'}`;
   $('subtotal').textContent = money(cart.subtotal);
+  $('total').textContent = money(cart.total);
   $('cart-empty').hidden = cart.count > 0;
+  renderCartUpdatedAt();
 }
 
 function makeProduct(product) {
@@ -187,11 +220,25 @@ dialog.addEventListener('keydown', event => {
   else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
 });
 
+function persistFilters() {
+  saveFilters({ search: $('search').value, category: $('category').value, sort: $('sort').value });
+}
+function restoreFilters() {
+  const saved = loadFilters();
+  if (typeof saved.search === 'string') $('search').value = saved.search.slice(0, $('search').maxLength);
+  for (const id of ['category', 'sort']) {
+    if ([...$(id).options].some(option => option.value === saved[id])) $(id).value = saved[id];
+  }
+}
 $('filters').addEventListener('submit', event => event.preventDefault());
 let searchTimer;
-$('search').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(renderProducts, 180); });
-for (const id of ['category', 'sort']) $(id).addEventListener('change', renderProducts);
-$('filters').addEventListener('reset', () => { clearTimeout(searchTimer); setTimeout(renderProducts, 0); });
+$('search').addEventListener('input', () => { persistFilters(); clearTimeout(searchTimer); searchTimer = setTimeout(renderProducts, 180); });
+for (const id of ['category', 'sort']) $(id).addEventListener('change', () => { persistFilters(); renderProducts(); });
+$('filters').addEventListener('reset', () => {
+  clearTimeout(searchTimer);
+  saveFilters({ search: '', category: '', sort: 'selection' });
+  setTimeout(renderProducts, 0);
+});
 
 const contact = $('contact-form');
 contact.noValidate = true;
@@ -241,6 +288,7 @@ async function start() {
     cart = new Cart(products, saved);
     const categories = [...new Set(products.map(p => p.category))];
     $('category').replaceChildren(new Option('Todas las categorías', ''), ...categories.map(c => new Option(c, c)));
+    restoreFilters();
     renderProducts();
     updateTotals();
   } catch {
@@ -249,4 +297,11 @@ async function start() {
   } finally { $('retry').disabled = false; }
 }
 $('retry').addEventListener('click', start);
+initConnectivity($('connection-status'));
+initScrollPreference($('smooth-scroll'));
 start();
+
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  navigator.serviceWorker.register(new URL('../sw.js', import.meta.url), { updateViaCache: 'none' })
+    .catch(error => console.warn('No se pudo activar el modo sin conexión.', error));
+}

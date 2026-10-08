@@ -4,10 +4,35 @@ import { readFileSync, existsSync } from 'node:fs';
 import { Cart } from '../js/cart.js';
 import { filterCatalog, validateCatalog } from '../js/catalog.js';
 import { validateContact } from '../js/validation.js';
+import { validatePendingPurchase } from '../js/pending-purchases.js';
 
 const products = JSON.parse(readFileSync(new URL('../data/products.json', import.meta.url), 'utf8'));
 const p = products[0];
 const v = p.variants[0];
+
+test('Total monetario usa centavos y sigue las modificaciones del carrito', () => {
+  const cart = new Cart(products);
+  assert.equal(cart.total, 0);
+  cart.add(p.id, v.id);
+  assert.equal(cart.total, p.priceCents);
+  cart.setQuantity(p.id, v.id, 2);
+  assert.equal(cart.total, p.priceCents * 2);
+  cart.setQuantity(p.id, v.id, 0);
+  assert.equal(cart.total, 0);
+});
+
+test('Estructura pendiente valida entradas y excluye datos personales y precios', () => {
+  const value = { id: 'test-purchase', createdAt: '2026-10-06T15:00:00.000Z', email: 'private@example.com',
+    items: [{ productId: p.id, variantId: v.id, quantity: 1, priceCents: 1 }] };
+  const valid = validatePendingPurchase(value);
+  assert.deepEqual(valid, { id: value.id, createdAt: value.createdAt, status: 'pending',
+    items: [{ productId: p.id, variantId: v.id, quantity: 1 }] });
+  for (const invalid of [null, { ...value, items: [] }, { ...value, createdAt: 'invalid' },
+    { ...value, items: [value.items[0], value.items[0]] },
+    { ...value, items: [{ ...value.items[0], quantity: -1 }] }]) {
+    assert.throws(() => validatePendingPurchase(invalid));
+  }
+});
 
 test('Catálogo completo, identificadores únicos e imágenes locales', () => {
   assert.equal(validateCatalog(products).length, 8);
@@ -75,4 +100,14 @@ test('Formulario rechaza guiones sin letras/dígitos, blancos y longitudes invá
   assert.ok(validateContact({ ...valid, message: '   '.repeat(10) }).message);
   assert.ok(validateContact({ ...valid, message: 'x'.repeat(1001) }).message);
   assert.ok(validateContact({}).name);
+});
+
+test('Regex de texto libre respeta límites y admite mensajes multilínea', () => {
+  for (const [field, min, max] of [['subject', 3, 100], ['message', 10, 1000]]) {
+    assert.ok(validateContact({ ...valid, [field]: 'x'.repeat(min - 1) })[field]);
+    assert.equal(validateContact({ ...valid, [field]: 'x'.repeat(min) })[field], undefined);
+    assert.equal(validateContact({ ...valid, [field]: 'x'.repeat(max) })[field], undefined);
+    assert.ok(validateContact({ ...valid, [field]: 'x'.repeat(max + 1) })[field]);
+  }
+  assert.deepEqual(validateContact({ ...valid, message: 'Consulta de tallas.\n¿Tienen talla M?' }), {});
 });

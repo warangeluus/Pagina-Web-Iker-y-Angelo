@@ -8,7 +8,7 @@ export function validateContact(values) {
   const phone = text('phone');
   const digits = phone.replace(/\D/g, '').length;
   if (phone && (!/^\+?[0-9() -]+$/.test(phone) || digits < 7 || digits > 15 || phone.length > 25)) errors.phone = 'Escribe entre 7 y 15 dígitos. Puedes incluir + al inicio, espacios, paréntesis y guiones.';
-  if (text('subject').length < 3 || text('subject').length > 100) errors.subject = 'Escribe un asunto de 3 a 100 caracteres.';
-  if (text('message').length < 10 || text('message').length > 1000) errors.message = 'Escribe un mensaje de 10 a 1000 caracteres.';
+  if (!/^[\s\S]{3,100}$/.test(text('subject'))) errors.subject = 'Escribe un asunto de 3 a 100 caracteres.';
+  if (!/^[\s\S]{10,1000}$/.test(text('message'))) errors.message = 'Escribe un mensaje de 10 a 1000 caracteres.';
   return errors;
 }

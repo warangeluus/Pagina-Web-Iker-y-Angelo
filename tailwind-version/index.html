@@ -6,8 +6,10 @@
   <meta name="description" content="URBAN STYLE. Explora camisetas, jeans y chompas; encuentra tus esenciales y prepara tu selección.">
   <meta name="theme-color" content="#171916">
   <title>URBAN STYLE | Tu estilo, a tu manera</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="assets/img/icon-192.png">
+  <link rel="apple-touch-icon" href="assets/img/icon-192.png">
+  <link rel="stylesheet" href="assets/styles.css">
   <script type="module" src="js/app.js"></script>
 </head>
 <body class="bg-paper text-ink antialiased">
@@ -23,8 +25,10 @@
       </ul></nav>
       <button id="open-cart" class="btn btn-dark" type="button" aria-haspopup="dialog" aria-controls="cart-dialog">Mi carrito <span id="cart-count" class="rounded-full bg-lime px-2 text-ink">0</span></button>
     </div>
+    <p id="connection-status" class="shell py-3 text-sm text-muted" role="status" aria-live="polite" aria-atomic="true"></p>
   </header>
   <main id="contenido" tabindex="-1">
+    <div id="announcement" class="announcement shell text-sm text-forest" role="status" aria-live="polite" aria-atomic="true"></div>
     <section id="inicio" class="bg-ink text-white" aria-labelledby="hero-title">
       <div class="shell grid items-center gap-8 py-12 md:grid-cols-2 md:py-16">
         <div>
@@ -46,7 +50,7 @@
         <p class="max-w-sm text-muted">Explora, elige tu talla y guarda tu selección en el carrito.</p>
       </div>
       <p class="mt-6 border-l-4 border-forest pl-4 text-sm text-muted">Catálogo provisional: fotografías de referencia, precios y existencias de ejemplo. Las compras aún no están habilitadas.</p>
-      <form id="filters" class="my-8 grid gap-4 border-y border-ink/20 py-6 sm:grid-cols-2 lg:grid-cols-4" role="search" aria-labelledby="catalog-title">
+      <form id="filters" class="my-8 grid gap-4 border-y border-ink/20 py-6 sm:grid-cols-2 lg:grid-cols-4" role="search" aria-label="Buscar y filtrar la colección">
         <div><label for="search">Buscar una prenda</label><input id="search" type="search" placeholder="Camiseta, jeans…" maxlength="100" autocomplete="off"></div>
         <div><label for="category">Categoría</label><select id="category"><option value="">Todas las categorías</option></select></div>
         <div><label for="sort">Ordenar por</label><select id="sort"><option value="selection">Nuestra selección</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="name">Nombre: A–Z</option></select></div>
@@ -65,7 +69,7 @@
       </div>
     </section>
     <section id="contacto" class="shell grid gap-10 py-14 md:py-20 lg:grid-cols-2" aria-labelledby="contact-title">
-      <div><p class="eyebrow text-forest">Hablemos de tu estilo</p><h2 id="contact-title" class="mt-3 text-4xl leading-tight tracking-tight">¿Tienes una pregunta?</h2><p class="mt-5 max-w-md text-muted">Puedes preparar tu consulta aquí. El envío estará disponible cuando abramos nuestro canal de atención; por ahora no se transmite ni se guarda tu información.</p><p class="mt-4 text-sm text-muted">Los campos marcados con * son obligatorios.</p></div>
+      <div><p class="eyebrow text-forest">Hablemos de tu estilo</p><h2 id="contact-title" class="mt-3 text-4xl leading-tight tracking-tight">¿Tienes una pregunta?</h2><p class="mt-5 max-w-md text-muted">Puedes preparar tu consulta aquí. El envío estará disponible cuando abramos nuestro canal de atención; por ahora no se transmite ni se guarda tu información.</p><p class="mt-4 text-sm text-muted">Los campos marcados con * son obligatorios.</p><noscript><p class="mt-4 text-sm">Activa JavaScript para revisar tu consulta. Sin JavaScript el botón de revisión permanece deshabilitado; este formulario no envía información.</p></noscript></div>
       <form id="contact-form" class="grid min-w-0 gap-5 sm:grid-cols-2">
         <div><label for="name">Nombre completo *</label><input id="name" name="name" type="text" autocomplete="name" required minlength="3" maxlength="80" aria-describedby="name-help name-error"><small id="name-help">Entre 3 y 80 caracteres.</small><p id="name-error" class="field-error" hidden></p></div>
         <div><label for="email">Correo electrónico *</label><input id="email" name="email" type="email" autocomplete="email" required maxlength="120" aria-describedby="email-help email-error"><small id="email-help">Ejemplo: nombre@correo.com.</small><p id="email-error" class="field-error" hidden></p></div>
@@ -76,8 +80,7 @@
       </form>
     </section>
   </main>
-  <footer class="bg-lime py-8"><div class="shell flex flex-wrap items-center justify-between gap-5"><a class="brand" href="#inicio">URBAN<span class="font-normal">STYLE</span></a><p>Estilo propio. Ciudad abierta.</p><p class="text-sm">© 2026 URBAN STYLE</p></div></footer>
-  <div id="announcement" class="shell py-3 text-sm text-forest" role="status" aria-live="polite" aria-atomic="true"></div>
+  <footer class="bg-lime py-8"><div class="shell flex flex-wrap items-center justify-between gap-5"><a class="brand" href="#inicio">URBAN<span class="font-normal">STYLE</span></a><p>Estilo propio. Ciudad abierta.</p><p class="text-sm">© 2026 URBAN STYLE</p><label class="mb-0 flex min-h-12 items-center gap-3"><input id="smooth-scroll" class="h-6 min-h-6 w-6 shrink-0 p-0 accent-ink" type="checkbox" checked disabled>Desplazamiento suave</label><noscript><p class="text-sm">Activa JavaScript para cambiar y guardar la preferencia de desplazamiento. La preferencia de movimiento reducido del sistema se respeta siempre.</p></noscript></div></footer>
   <dialog id="cart-dialog" class="cart-dialog" aria-labelledby="cart-title" aria-describedby="cart-note" aria-modal="true">
     <div class="flex flex-wrap items-center justify-between gap-4 border-b border-ink/20 pb-5"><h2 id="cart-title" class="text-3xl">Mi carrito</h2><button id="close-cart" class="btn btn-outline" type="button" autofocus>Cerrar <span aria-hidden="true">×</span></button></div>
     <p id="cart-note" class="my-5 text-sm text-muted">Tu selección se guarda en este navegador. Los precios y existencias son provisionales; todavía no puedes realizar compras.</p>
@@ -85,7 +88,7 @@
     <p id="cart-empty" class="py-10 text-center">Tu carrito está vacío. Encuentra una prenda que vaya contigo.</p>
     <ul id="cart-items" class="space-y-6"></ul>
     <p id="cart-status" class="mt-4 text-sm text-forest" role="status" aria-atomic="true"></p>
-    <div class="mt-6 border-t border-ink/20 pt-5"><div class="flex flex-wrap justify-between gap-3 text-xl font-bold"><span>Subtotal estimado</span><span id="subtotal">$0.00</span></div><p class="mt-2 text-sm text-muted">No se han calculado envío ni cargos adicionales. No se efectuará ningún cobro.</p><button id="continue" type="button" class="btn btn-dark mt-6 w-full">Seguir explorando</button></div>
+    <div class="mt-6 border-t border-ink/20 pt-5"><p id="cart-item-count" class="mb-3 text-sm">0 prendas</p><div class="flex flex-wrap justify-between gap-3 text-xl font-bold"><span>Subtotal estimado</span><span id="subtotal">$0.00</span></div><div class="mt-2 flex flex-wrap justify-between gap-3 font-bold"><span>Total estimado (sin envío)</span><span id="total">$0.00</span></div><p id="cart-updated-at" class="mt-2 text-sm text-muted">Todavía no hay modificaciones registradas.</p><p class="mt-2 text-sm text-muted">No se han calculado envío ni cargos adicionales. No se efectuará ningún cobro.</p><button id="continue" type="button" class="btn btn-dark mt-6 w-full">Seguir explorando</button></div>
   </dialog>
 </body>
 </html>

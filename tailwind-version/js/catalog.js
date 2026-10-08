@@ -1,3 +1,5 @@
+import { readCatalogCache, writeCatalogCache } from './storage.js';
+
 export const money = (cents) => new Intl.NumberFormat('es-EC', { style: 'currency', currency: 'USD' }).format(cents / 100);
 export const normalize = (value) => String(value).normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es').trim();
 
@@ -36,7 +38,16 @@ export function filterCatalog(products, { search = '', category = '', sort = 'se
 }
 
 export async function loadCatalog() {
-  const response = await fetch(new URL('../data/products.json', import.meta.url), { signal: AbortSignal.timeout(15000) });
-  if (!response.ok) throw new Error(`Error de catálogo: ${response.status}`);
-  return validateCatalog(await response.json());
+  let products;
+  try {
+    const response = await fetch(new URL('../data/products.json', import.meta.url), { signal: AbortSignal.timeout(15000) });
+    if (!response.ok) throw new Error(`Error de catálogo: ${response.status}`);
+    products = validateCatalog(await response.json());
+  } catch (error) {
+    try { return validateCatalog(await readCatalogCache()); }
+    catch { throw error; }
+  }
+  try { await writeCatalogCache(products); }
+  catch { /* A cache failure must not discard a valid network response. */ }
+  return products;
 }

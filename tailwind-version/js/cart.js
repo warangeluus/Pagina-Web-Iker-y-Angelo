@@ -35,5 +35,7 @@ export class Cart {
   add(productId, variantId) { this.setQuantity(productId, variantId, this.quantity(productId, variantId) + 1); }
   get count() { return this.items.reduce((sum, item) => sum + item.quantity, 0); }
   get subtotal() { return this.items.reduce((sum, item) => sum + this.lookup(item.productId, item.variantId).product.priceCents * item.quantity, 0); }
+  // Only merchandise is priced at this stage; shipping and other charges are undefined.
+  get total() { return this.subtotal; }
   serialize() { return this.items.map(item => ({ ...item })); }
 }
